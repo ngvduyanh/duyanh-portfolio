@@ -1,0 +1,63 @@
+!pip install yfinance --upgrade --no-cache-dir
+# Upgrade yfinance and clear cache
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+# Instead of directly using pandas_datareader, we'll use yfinance directly
+import yfinance as yf
+# yf.pdr_override()
+# Remove this line, no longer needed
+from pandas_datareader import data as pdr
+import datetime as dt
+import matplotlib.pyplot as plt
+
+# Define the ticker symbol and the time frame you want to fetch data
+for ticker = 'VCB'
+# Replace with actual ticker for Asia Commercial Bank if different
+start_date = dt.datetime(2019, 1, 1) end_date = dt.datetime(2024, 1, 1)
+# Assuming you have future data until 2024
+
+# Fetch data from Yahoo Finance using yfinance directly
+df = yf.download(ticker, start=start_date, end=end_date)
+# Use yf.download instead of pdr.get_data_yahoo
+#df = pdr.get_data_yahoo(ticker, start=start_date, end=end_date)
+
+# Use only the 'Close' column for simplicity
+df = df[['Close']]
+
+# Create lagged variables as potential predictors
+for lag in range(1, 6):  # Creating 5 lagged variables as example
+    df[f'Close_lag{lag}'] = df['Close'].shift(lag)
+
+# Drop any rows with NaN values that were created by lagging variables
+df.dropna(inplace=True)
+
+# Define the features (X) and the target (y)
+X = df.drop(columns=['Close'])
+y = df['Close']
+
+# Add a constant to the features for the intercept
+X = sm.add_constant(X)
+
+# Fit the Ordinary Least Squares (OLS) model
+model = sm.OLS(y, X).fit()
+
+# Print out the statistics
+print(model.summary())
+
+# Calculate and print AIC
+aic = model.aic
+print(f'AIC: {aic}')
+
+# Plot the residual normal probability plot
+fig = sm.qqplot(model.resid, line='s')
+plt.title('Normal Probability Plot of Residuals')
+plt.show()
+
+# Plot the residuals vs fits
+plt.scatter(model.predict(X), model.resid)
+plt.axhline(y=0, color='r', linestyle='--')
+plt.xlabel('Fitted values')
+plt.ylabel('Residuals')
+plt.title('Residuals vs Fitted')
+plt.show()
