@@ -1,0 +1,101 @@
+import yfinance as yf
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Define the ticker symbol
+ticker_symbol = "VCB.VN"
+# Replace with the actual ticker symbol
+
+# Download stock data from Yahoo Finance
+data = yf.download(ticker_symbol, start="2023-01-01", end="2023-12-31")
+# Adjust dates as needed
+
+# We will use the 'Close' price for the rolling mean
+rolling_window = data['Close'].rolling(window=3)
+# 3-day rolling mean
+rolling_mean = rolling_window.mean()
+
+# Plotting
+plt.figure(figsize=(10, 5))
+plt.plot(data['Close'], label='Original')
+# Plot the original closing prices
+plt.plot(rolling_mean, label='Rolling Mean', color='red')
+plt.title(f'3-Day Rolling Mean of {ticker_symbol} Stock Prices')
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.legend()
+plt.show()
+\end{verbatim}
+
+\subsubsection{Rolling Window Concept Python Code}
+\begin{verbatim}
+!pip install yfinance --upgrade --no-cache-dir
+!pip install pandas-datareader --upgrade
+import yfinance as yf
+import pandas as pd
+import pandas_datareader.data as web
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+from datetime import datetime
+import numpy as np
+
+# Define the stock symbol and the time frame you're interested in
+stock_symbol = 'VCB.VN'
+start_date = '2019-10-01'
+end_date = '2024-10-01'
+
+# Collect stock data using yfinance as a workaround
+# df = web.DataReader(stock_symbol, data_source='yahoo',
+start=start_date, end=end_date)
+
+# This line was causing the issue
+df = yf.download(stock_symbol, start=start_date, end=end_date) # Using yfinance to fetch data instead
+
+df = df[['Close']]  # We will only use the 'Close' prices
+
+# Define the size of the rolling window (e.g., 30 days)
+rolling_window_size = 30
+
+# We will predict prices for 1 day into the future
+forecast_horizon = 1
+
+# Create a new column for predictions
+df['Prediction'] = df['Close'].shift(-forecast_horizon)
+
+# Initialize the prediction array with NaN for the length of the forecast
+horizon
+# Instead of a fixed number of NaNs, we need enough to cover the entire
+DataFrame:
+predictions = [np.nan for _ in range(len(df))]
+
+# Rolling window prediction
+for i in range(rolling_window_size, len(df) - forecast_horizon):
+    # Define the rolling window
+    x_train = np.array(range(rolling_window_size)).reshape(-1, 1)
+    y_train = df['Close'][i - rolling_window_size:i].values
+
+    # Create and train the Linear Regression model
+    model = LinearRegression()
+    model.fit(x_train, y_train)
+
+    # Predict the next value
+    x_test = np.array([[rolling_window_size]])
+    prediction = model.predict(x_test)
+
+    # Store the prediction in the correct position in the predictions list
+    predictions[i + forecast_horizon] = prediction[0]
+
+# Append the predictions to the dataframe
+df['Rolling_Prediction'] = pd.Series(predictions, index=df.index)
+
+# Visualize the data
+plt.figure(figsize=(16,8))
+plt.title('Rolling Window Stock Price Prediction')
+plt.xlabel('Date')
+plt.ylabel('Price (VND)')
+plt.plot(df['Close'], label='Close Price History', color='blue')
+plt.plot(df['Rolling_Prediction'], label='Rolling Window Prediction', color='red',
+mlinestyle='--')
+
+plt.legend()
+plt.show()
